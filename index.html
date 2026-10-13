@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Web Basics Workshop</title>
+  <meta name="description" content="A hands-on beginner workshop: learn HTML, CSS and JavaScript in 7 interactive steps.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='16'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='13' font-weight='700' fill='white' text-anchor='middle'%3E%26lt;/%26gt;%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Open+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <p class="eyebrow">Beginner workshop</p>
+        <p class="brand-title">Web Basics</p>
+        <p class="brand-sub">HTML, CSS &amp; JavaScript in 7 steps</p>
+      </div>
+
+      <div class="progress">
+        <p class="progress-text" id="progress-text">0 of 7 labs complete</p>
+        <div class="progress-track" id="progress-track" role="progressbar" aria-labelledby="progress-text" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <nav aria-label="Workshop steps">
+        <ol class="step-list" id="step-list"></ol>
+      </nav>
+    </aside>
+
+    <main id="main" tabindex="-1">
+      <!-- A step: lesson + lab -->
+      <section class="view" id="view-step" hidden aria-labelledby="step-title">
+        <header class="page-header">
+          <p class="eyebrow" id="step-eyebrow">Step 1 of 7</p>
+          <h1 id="step-title" tabindex="-1">Step</h1>
+        </header>
+
+        <div class="lesson prose" id="lesson"></div>
+
+        <section class="lab" aria-labelledby="lab-title">
+          <div class="lab-intro">
+            <p class="eyebrow">Hands-on lab</p>
+            <h2 id="lab-title">Your turn</h2>
+            <p class="goal" id="lab-goal"></p>
+          </div>
+
+          <div class="lab-tools">
+            <button type="button" class="btn btn-secondary" id="btn-reset">Reset code</button>
+            <button type="button" class="btn btn-secondary" id="btn-hint">Show hint</button>
+            <button type="button" class="btn btn-secondary" id="btn-solution">Show solution</button>
+          </div>
+          <ol class="hints" id="hints" hidden></ol>
+
+          <div class="workbench">
+            <div class="pane pane-editor">
+              <div class="pane-bar">
+                <div class="tabs" role="tablist" aria-label="Code files" id="tabs"></div>
+                <span class="pane-note">Esc to leave the editor</span>
+              </div>
+              <div class="editor-host" id="editor" role="tabpanel"></div>
+            </div>
+
+            <div class="pane pane-preview">
+              <div class="pane-bar">
+                <span class="pane-title">Live preview</span>
+                <span class="pane-status" id="preview-status" aria-hidden="true"></span>
+              </div>
+              <iframe class="preview-frame" id="preview" title="Live preview of your code"
+                sandbox="allow-scripts allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox"></iframe>
+              <div class="error-bar" id="error-bar" role="status" hidden></div>
+            </div>
+          </div>
+
+          <div class="results">
+            <div class="results-head">
+              <h3>Checklist</h3>
+              <p class="results-count" id="results-count"></p>
+            </div>
+            <ul class="checklist" id="checklist"></ul>
+            <p class="results-note" id="results-note" hidden></p>
+          </div>
+
+          <div class="complete" id="complete" hidden>
+            <div class="complete-mark" aria-hidden="true">✓</div>
+            <div class="complete-body">
+              <h3 class="complete-title" id="complete-title" tabindex="-1">Lab complete!</h3>
+              <p class="complete-text" id="complete-text"></p>
+            </div>
+            <a class="btn btn-inverse" id="complete-next" href="#">Next step →</a>
+          </div>
+        </section>
+      </section>
+
+      <!-- A reading page: "Start here" and "Going further" -->
+      <section class="view" id="view-page" hidden aria-labelledby="page-title">
+        <header class="page-header">
+          <p class="eyebrow" id="page-eyebrow"></p>
+          <h1 id="page-title" tabindex="-1"></h1>
+        </header>
+        <div class="prose page-prose" id="page-body"></div>
+        <div class="actions page-next">
+          <a class="btn btn-primary" id="page-next" href="#"></a>
+        </div>
+      </section>
+
+      <!-- A locked step -->
+      <section class="view view-narrow" id="view-locked" hidden aria-labelledby="locked-title">
+        <header class="page-header">
+          <p class="eyebrow" id="locked-eyebrow">Locked</p>
+          <h1 id="locked-title" tabindex="-1">This step is locked</h1>
+        </header>
+        <p class="lead" id="locked-text"></p>
+        <div class="actions">
+          <a class="btn btn-primary" id="locked-go" href="#">Go back</a>
+          <button type="button" class="btn btn-secondary" id="locked-skip">Skip anyway</button>
+        </div>
+      </section>
+
+      <!-- Completion screen -->
+      <section class="view view-narrow" id="view-finish" hidden aria-labelledby="finish-title">
+        <header class="page-header">
+          <p class="eyebrow">Workshop complete</p>
+          <h1 id="finish-title" tabindex="-1"></h1>
+        </header>
+        <p class="lead" id="finish-intro"></p>
+        <p class="finish-note" id="finish-note" hidden></p>
+
+        <h2>What you learned</h2>
+        <ol class="learned" id="finish-learned"></ol>
+
+        <h2>Keep learning on MDN</h2>
+        <ul class="link-list" id="finish-links"></ul>
+
+        <div class="actions">
+          <a class="btn btn-primary" href="#beyond">Going further: Tailwind, Bootstrap, React</a>
+          <a class="btn btn-secondary" href="#step-1">Review the lessons</a>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <p>Your code and progress are saved in this browser.</p>
+        <button type="button" class="link-btn" id="reset-all">Reset all progress</button>
+      </footer>
+    </main>
+  </div>
+
+  <dialog class="dialog" id="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-body">
+    <form method="dialog">
+      <h2 class="dialog-title" id="dialog-title"></h2>
+      <p class="dialog-body" id="dialog-body"></p>
+      <div class="actions">
+        <button class="btn btn-secondary" value="cancel" id="dialog-cancel">Cancel</button>
+        <button class="btn btn-primary" value="confirm" id="dialog-confirm">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="sr-only" aria-live="polite" id="announcer"></div>
+
+  <noscript><p class="noscript">This workshop needs JavaScript to run. Please enable it and reload the page.</p></noscript>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/jsx/jsx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode.min.js"></script>
+  <script src="labs.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
