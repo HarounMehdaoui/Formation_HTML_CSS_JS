@@ -1,5 +1,7 @@
 # Web Basics Workshop
 
+**Live site: [formation1jei.vercel.app](https://formation1jei.vercel.app)**
+
 An interactive beginner workshop that teaches HTML, CSS and JavaScript in 7 steps.
 Each step has a short lesson, then a hands-on lab: edit the starter code, watch the
 live preview, and the page automatically checks whether you reached the goal.
