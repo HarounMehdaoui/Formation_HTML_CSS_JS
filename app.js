@@ -4,7 +4,8 @@ const store = {
   get(k){ try { return JSON.parse(localStorage.getItem('exo-'+k)); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem('exo-'+k, JSON.stringify(v)); } catch(e){} }
 };
-let cur, tab = 'html', code = {html:'', css:''}, hintsShown = 0;
+let cur, tab = 'html', code = {html:'', css:''}, hintsShown = 0, mine = null;
+function solOff(){ mine = null; $('#bSol').classList.remove('on'); $('#bSol').textContent = 'Correction'; $('#solnote').hidden = true; $('#sol').classList.remove('on'); }
 
 function hlHTML(s){
   let out = '', re = /(<!--[\s\S]*?-->)|(<\/?[a-zA-Z][\w-]*)|(\/?>)|("[^"]*"?)|([a-zA-Z-:]+)(?==)/g, last = 0, m, inTag = false;
@@ -40,10 +41,14 @@ function doc(c, zoom){
 function paint(){
   const v = $('#ta').value;
   $('#hl').innerHTML = (tab === 'html' ? hlHTML(v) : hlCSS(v)) + '\n';
-  $('#gutter').textContent = Array.from({length: v.split('\n').length}, (_, i) => i+1).join('\n');
+  const lines = v.split('\n');
+  const old = mine ? new Set(mine[tab].split('\n').map(l => l.trim())) : null;
+  const chg = lines.map(l => !!old && l.trim() !== '' && !old.has(l.trim()));
+  $('#gutter').innerHTML = lines.map((_, i) => chg[i] ? '<span>' + (i+1) + '</span>' : (i+1)).join('\n');
+  $('#bands').innerHTML = lines.map((l, i) => chg[i] ? '<span>' + esc(l || ' ') + '</span>' : esc(l)).join('\n') + '\n';
 }
 function render(){ $('#pv').srcdoc = doc(code); $('#state').textContent = 'À jour'; }
-$('#ta').addEventListener('scroll', () => { $('#hl').scrollTop = $('#ta').scrollTop; $('#hl').scrollLeft = $('#ta').scrollLeft; $('#gutter').scrollTop = $('#ta').scrollTop; });
+$('#ta').addEventListener('scroll', () => { $('#hl').scrollTop = $('#bands').scrollTop = $('#ta').scrollTop; $('#hl').scrollLeft = $('#bands').scrollLeft = $('#ta').scrollLeft; $('#gutter').scrollTop = $('#ta').scrollTop; });
 $('#ta').addEventListener('input', () => { code[tab] = $('#ta').value; paint(); $('#state').textContent = '…'; clearTimeout(window._r); window._r = setTimeout(render, 250); store.set(cur.id, code); });
 $('#ta').addEventListener('keydown', e => {
   const ta = e.target;
@@ -51,7 +56,7 @@ $('#ta').addEventListener('keydown', e => {
   if (e.key === 'Enter'){ e.preventDefault(); const a = ta.selectionStart; const line = ta.value.slice(0,a).split('\n').pop(); let ind = (line.match(/^\s*/)||[''])[0]; if (/[{>]\s*$/.test(line) && !/<\/[^>]*>\s*$/.test(line) && !/<(img|br|hr|input)\b[^>]*>\s*$/i.test(line)) ind += '  '; const ins = '\n' + ind; ta.value = ta.value.slice(0,a) + ins + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = a + ins.length; ta.dispatchEvent(new Event('input')); }
 });
 $('#copy').onclick = async () => { try { await navigator.clipboard.writeText(code[tab]); $('#copy').textContent = 'Copié'; } catch(e){ $('#ta').select(); $('#copy').textContent = 'Ctrl+C'; } setTimeout(() => $('#copy').textContent = 'Copier', 1500); };
-function setTab(t){ tab = t; document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $('#ta').value = code[t]; $('#ta').scrollTop = 0; paint(); }
+function setTab(t){ tab = t; document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $('#ta').value = code[t]; $('#ta').scrollTop = 0; $('#ta').scrollLeft = 0; paint(); $('#ta').dispatchEvent(new Event('scroll')); if (mine) jumpChange(); }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 function focusTodo(){
   const v = $('#ta').value, m = /\{\s*\n\s*\/\*/.exec(v); if (!m) return;
@@ -71,10 +76,16 @@ $('#bHint').onclick = () => {
   $('#hints').innerHTML = cur.hints.slice(0, hintsShown).map((h, i) => '<p><b>Indice ' + (i+1) + '</b>' + h + '</p>').join('');
   hintLabel();
 };
-$('#bSol').onclick = () => { const on = $('#sol').classList.toggle('on'); $('#bSol').classList.toggle('on', on); $('#bSol').textContent = on ? 'Masquer la correction' : 'Correction'; };
+$('#bSol').onclick = () => {
+  if (cur.kind !== 'code'){ const on = $('#sol').classList.toggle('on'); $('#bSol').classList.toggle('on', on); $('#bSol').textContent = on ? 'Masquer la correction' : 'Correction'; return; }
+  if (mine){ code = mine; solOff(); }
+  else { mine = {html: code.html, css: code.css}; code = {html: cur.sol.html, css: cur.sol.css}; $('#bSol').classList.add('on'); $('#bSol').textContent = 'Revenir à mon code'; $('#solnote').hidden = false; }
+  store.set(cur.id, mine || code); setTab(tab); render(); jumpChange();
+};
+function jumpChange(){ const g = $('#gutter span'); if (!g) return; const n = +g.textContent; $('#ta').scrollTop = Math.max(0, (n - 3) * 23); $('#ta').dispatchEvent(new Event('scroll')); }
 $('#bReset').onclick = e => twoStep(e.currentTarget, 'Réinitialiser', () => {
   hintsShown = 0; $('#hints').innerHTML = ''; hintLabel();
-  $('#sol').classList.remove('on'); $('#bSol').classList.remove('on'); $('#bSol').textContent = 'Correction';
+  solOff();
   if (cur.kind === 'code'){ code = {html: cur.start.html, css: cur.start.css}; store.set(cur.id, code); setTab(tab); focusTodo(); render(); }
 });
 
@@ -89,12 +100,9 @@ function load(id){
   $('#client').innerHTML = cur.client ? '<p class="quote">' + cur.client + '</p>' : '';
   $('#steps').innerHTML = cur.steps.map(s => '<li><span>' + s + '</span></li>').join('');
   $('#hints').innerHTML = ''; hintLabel();
-  $('#sol').classList.remove('on'); $('#bSol').classList.remove('on'); $('#bSol').textContent = 'Correction';
+  solOff();
   if (cur.kind === 'code'){
     $('#goalbox').hidden = false; $('#goal').srcdoc = doc(cur.sol, 0.6);
-    const one = !cur.sol.css.trim();
-    $('#sol').innerHTML = '<div class="sh"><span>Correction</span><button class="lk" id="bLoad">Charger dans l\'éditeur</button></div><div class="cols' + (one ? ' one' : '') + '"><div><div class="cap">HTML</div><pre>' + esc(cur.sol.html) + '</pre></div>' + (one ? '' : '<div><div class="cap">CSS</div><pre>' + esc(cur.sol.css) + '</pre></div>') + '</div>';
-    $('#bLoad').onclick = e => twoStep(e.currentTarget, 'Charger dans l\'éditeur', () => { code = {html: cur.sol.html, css: cur.sol.css}; store.set(cur.id, code); setTab(tab); render(); });
     $('#work').hidden = false; $('#pg').hidden = true;
     code = store.get(cur.id) || {html: cur.start.html, css: cur.start.css};
     setTab(id === 'ex1' ? 'html' : 'css'); focusTodo(); render();

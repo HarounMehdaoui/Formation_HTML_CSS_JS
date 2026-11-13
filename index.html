@@ -34,6 +34,7 @@
     <button class="btn" id="bHint">Indice (1/3)</button>
     <button class="btn" id="bSol">Correction</button>
     <button class="btn" id="bReset">Réinitialiser</button>
+    <span class="solnote" id="solnote" hidden><i></i>Lignes de la correction</span>
   </div>
   <div class="hints" id="hints"></div>
   <div class="sol" id="sol"></div>
@@ -41,7 +42,7 @@
   <section class="work" id="work">
     <div class="pane">
       <div class="bar"><div class="tabs"><button data-tab="html" class="on">HTML</button><button data-tab="css">CSS</button></div><button class="muted" id="copy">Copier</button></div>
-      <div class="editor"><div class="gutter" id="gutter">1</div><div class="code"><pre id="hl" aria-hidden="true"></pre><textarea id="ta" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="Éditeur de code"></textarea></div></div>
+      <div class="editor"><div class="gutter" id="gutter">1</div><div class="code"><pre class="bands" id="bands" aria-hidden="true"></pre><pre id="hl" aria-hidden="true"></pre><textarea id="ta" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="Éditeur de code"></textarea></div></div>
     </div>
     <div class="pane">
       <div class="bar"><b>Aperçu en direct</b><span class="muted" id="state">À jour</span></div>
